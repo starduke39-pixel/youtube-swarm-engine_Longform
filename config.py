@@ -5,8 +5,8 @@ GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY")
 PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY")
 
-# --- GEMINI SETTINGS (LATEST MODEL) ---
-# Switching to Gemini 2.0 Flash Experimental
+# --- GEMINI SETTINGS ---
+# Using the experimental 2.0 Flash model (Free & Fast)
 GEMINI_MODEL = "gemini-2.0-flash-exp"
 GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
 
@@ -14,13 +14,13 @@ GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMI
 BASE_DIR = "Production_Factory_LongForm"
 ASSETS_DIR = "assets"
 
-# --- VOICE MAPPING ---
+# --- VOICE MAPPING (UPDATED) ---
 VOICE_MAP = {
-    "Trivia_Core": "nPczCjz8TkKk1be360ku",
-    "Ancient_Echoes": "CwhRBWXzGAHq8TQ4Fs17",
-    "Abyss_Archives": "TxGEqnHWrfWFTfGW9XjX",
-    "Apex_Lists": "29vD33N1CtxCmqQRPOHJ",
-    "Mind_Architect": "ODq5zmih8GrVes37Dizj"
+    "Trivia_Core": "D38z5RcWu1voky8WS1ja",      # Fin (High Energy) - FIXED
+    "Ancient_Echoes": "CwhRBWXzGAHq8TQ4Fs17",   # Roger (Deep/Story) - WORKING
+    "Abyss_Archives": "TxGEqnHWrfWFTfGW9XjX",   # Josh (Creepy) - WORKING
+    "Apex_Lists": "29vD33N1CtxCmqQRPOHJ",       # Callum (Pro) - WORKING
+    "Mind_Architect": "pNInz6obpgDQGcFmaJgB"    # Adam (Stoic) - FIXED
 }
 
 # --- PROMPTS ---
