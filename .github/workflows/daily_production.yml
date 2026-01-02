@@ -1,4 +1,4 @@
-name: Daily Content Factory (Long Form + Socials + SEO)
+name: Daily Content Factory (Gemini)
 
 on:
   workflow_dispatch:
@@ -20,16 +20,15 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y imagemagick ffmpeg
-        # CRITICAL FIX: Allow ImageMagick to process text
         sudo sed -i 's/none/read,write/g' /etc/ImageMagick-6/policy.xml
 
     - name: Install Python Libraries
       run: |
         pip install -r requirements.txt
 
-    - name: 1. Generate Scripts (OpenRouter)
+    - name: 1. Generate Scripts (Google Gemini)
       env:
-        OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       run: python 1_script_generator.py
 
     - name: 2. Generate Audio (ElevenLabs)
@@ -46,15 +45,14 @@ jobs:
       continue-on-error: true 
       run: python 4_trivia_builder.py
 
-    - name: 5. Repurpose for Socials (Reels & Tweets)
+    - name: 5. Repurpose for Socials (Gemini)
       env:
-        OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       run: python 5_social_repurposer.py
 
-    # --- NEW STEP: SEO METADATA ---
-    - name: 6. Generate SEO Metadata
+    - name: 6. Generate SEO Metadata (Gemini)
       env:
-        OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       run: python 6_metadata_generator.py
 
     - name: Upload Finished Production Pack
