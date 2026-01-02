@@ -1,4 +1,4 @@
-name: Daily Content Factory (Long Form + Socials)
+name: Daily Content Factory (Long Form + Socials + SEO)
 
 on:
   workflow_dispatch:
@@ -46,17 +46,21 @@ jobs:
       continue-on-error: true 
       run: python 4_trivia_builder.py
 
-    # --- NEW STEP ADDED HERE ---
     - name: 5. Repurpose for Socials (Reels & Tweets)
       env:
         OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       run: python 5_social_repurposer.py
 
+    # --- NEW STEP: SEO METADATA ---
+    - name: 6. Generate SEO Metadata
+      env:
+        OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      run: python 6_metadata_generator.py
+
     - name: Upload Finished Production Pack
       uses: actions/upload-artifact@v4
       with:
         name: Complete-Content-Pack
-        # --- UPDATED PATHS BELOW ---
         path: |
           Production_Factory_LongForm/
           Social_Media_Pack/
