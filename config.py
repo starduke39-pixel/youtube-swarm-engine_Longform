@@ -1,24 +1,14 @@
 import os
 
 # --- API KEYS ---
-OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
+# Make sure you added GOOGLE_API_KEY to your GitHub Secrets!
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY")
 PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY")
 
-# --- OPENROUTER SETTINGS ---
-OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-
-# --- UPDATED MODEL LIST (Active Free Models) ---
-# This list mixes different providers to avoid hitting the same rate limit twice.
-MODEL_LIST = [
-    "google/gemini-2.0-flash-exp:free",           # Primary (Fastest)
-    "meta-llama/llama-3.2-3b-instruct:free",      # Backup 1 (Reliable)
-    "mistralai/mistral-7b-instruct:free",         # Backup 2 (Classic)
-    "openchat/openchat-7b:free",                  # Backup 3 (Uncensored-ish)
-    "huggingfaceh4/zephyr-7b-beta:free",          # Backup 4 (Good writing)
-    "microsoft/phi-3-mini-128k-instruct:free",    # Backup 5
-    "meta-llama/llama-3-8b-instruct:free"         # Backup 6
-]
+# --- GEMINI SETTINGS ---
+# We use 1.5 Flash because it's fast, free, and has a huge context window.
+GEMINI_MODEL_NAME = "gemini-1.5-flash"
 
 # --- DIRECTORY SETUP ---
 BASE_DIR = "Production_Factory_LongForm"
