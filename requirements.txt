@@ -1,0 +1,5 @@
+openai
+requests
+moviepy==1.0.3
+pexels-api-py
+python-dotenv
