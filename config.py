@@ -9,12 +9,15 @@ PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY")
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
 # --- UPDATED MODEL LIST (Active Free Models) ---
+# This list mixes different providers to avoid hitting the same rate limit twice.
 MODEL_LIST = [
-    "google/gemini-2.0-flash-exp:free",           # Primary
-    "meta-llama/llama-3.2-3b-instruct:free",      # Backup 1
-    "google/gemini-2.0-pro-exp-02-05:free",       # Backup 2 (New)
-    "microsoft/phi-3-mini-128k-instruct:free",    # Backup 3
-    "gryphe/mythomax-l2-13b:free"                 # Backup 4
+    "google/gemini-2.0-flash-exp:free",           # Primary (Fastest)
+    "meta-llama/llama-3.2-3b-instruct:free",      # Backup 1 (Reliable)
+    "mistralai/mistral-7b-instruct:free",         # Backup 2 (Classic)
+    "openchat/openchat-7b:free",                  # Backup 3 (Uncensored-ish)
+    "huggingfaceh4/zephyr-7b-beta:free",          # Backup 4 (Good writing)
+    "microsoft/phi-3-mini-128k-instruct:free",    # Backup 5
+    "meta-llama/llama-3-8b-instruct:free"         # Backup 6
 ]
 
 # --- DIRECTORY SETUP ---
