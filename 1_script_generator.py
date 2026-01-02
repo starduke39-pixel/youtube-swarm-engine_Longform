@@ -3,20 +3,21 @@ import datetime
 from openai import OpenAI
 import config
 
-# Setup Client for OpenRouter
+# Setup Client
 client = OpenAI(
     base_url=config.OPENROUTER_BASE_URL,
     api_key=config.OPENROUTER_API_KEY,
 )
 
 def generate_ideas(niche):
-    """Generates 5 video topic ideas using the configured free model."""
+    """Generates 5 LONG FORM video topic ideas."""
     try:
         response = client.chat.completions.create(
             model=config.MODEL_NAME,
             messages=[
                 {"role": "system", "content": "You are a YouTube Strategist."},
-                {"role": "user", "content": f"Give me 5 viral 60-second video topics for a channel about {niche}. Return only the titles, one per line, no numbering."}
+                # CHANGED LINE BELOW: From "viral 60-second" to "Deep Dive / Documentary"
+                {"role": "user", "content": f"Give me 5 engaging, long-form (10 minute+) video topics for a channel about {niche}. Return only the titles, one per line, no numbering."}
             ],
             extra_headers={
                 "HTTP-Referer": "https://github.com",
@@ -36,7 +37,7 @@ def generate_script(title, system_prompt):
             model=config.MODEL_NAME,
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Write a script for a video titled: '{title}'. Include visual cues in brackets [Like this]."}
+                {"role": "user", "content": f"Write a comprehensive, long-form script for a video titled: '{title}'. Include visual cues in brackets [Like this]. Break it down into sections."}
             ],
             extra_headers={
                 "HTTP-Referer": "https://github.com",
@@ -50,12 +51,13 @@ def generate_script(title, system_prompt):
 
 def main():
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
-    production_dir = os.path.join(config.BASE_DIR, f"Run_{timestamp}")
+    # UPDATED FOLDER NAME
+    production_dir = os.path.join(config.BASE_DIR, f"Run_LongForm_{timestamp}")
     
     if not os.path.exists(production_dir):
         os.makedirs(production_dir)
 
-    print(f"🚀 Starting Batch Production Run: {timestamp}")
+    print(f"🚀 Starting Long-Form Production Run: {timestamp}")
     print(f"🤖 Using Model: {config.MODEL_NAME}")
 
     for channel_name, prompt in config.CHANNEL_PROMPTS.items():
@@ -66,14 +68,12 @@ def main():
             os.makedirs(channel_path)
 
         # 1. Get Ideas
-        print("   Thinking of ideas...")
+        print("   Thinking of Long Form ideas...")
         titles = generate_ideas(channel_name)
         
         # 2. Write Scripts
         for i, title in enumerate(titles):
-            # Clean title logic
             clean_title = title.replace('"', '').replace(':', '').replace('/', '').replace('.', '').replace('*', '').strip()
-            # Remove leading numbers if the model added them (e.g. "1. Topic")
             if len(clean_title) > 0 and clean_title[0].isdigit():
                 clean_title = clean_title.lstrip('0123456789.- ')
                 
@@ -82,7 +82,6 @@ def main():
             print(f"   ✍️ Writing Script: {clean_title}")
             script_content = generate_script(clean_title, prompt)
             
-            # Save to file
             filename = f"{i+1}_{clean_title[:30]}.txt"
             with open(os.path.join(channel_path, filename), "w", encoding='utf-8') as f:
                 f.write(f"TITLE: {clean_title}\n\n")
