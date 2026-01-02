@@ -1,32 +1,12 @@
 import os
-import time
-from openai import OpenAI
+import google.generativeai as genai
 import config
 
 INPUT_DIR = os.path.join(config.BASE_DIR)
 
-client = OpenAI(
-    base_url=config.OPENROUTER_BASE_URL,
-    api_key=config.OPENROUTER_API_KEY,
-)
-
-def get_completion_with_retry(messages):
-    for model in config.MODEL_LIST:
-        try:
-            response = client.chat.completions.create(
-                model=model,
-                messages=messages,
-                extra_headers={"HTTP-Referer": "https://github.com"}
-            )
-            return response.choices[0].message.content
-        except Exception as e:
-            if "429" in str(e):
-                print(f"   ⚠️ Rate limit ({model}), switching...")
-                time.sleep(1)
-                continue
-            else:
-                continue
-    return None
+# Setup Gemini
+genai.configure(api_key=config.GOOGLE_API_KEY)
+model = genai.GenerativeModel(config.GEMINI_MODEL_NAME)
 
 def generate_seo_metadata(script_path, channel_name):
     try:
@@ -38,23 +18,19 @@ def generate_seo_metadata(script_path, channel_name):
         prompt = f"""
         You are a YouTube SEO Expert for the channel '{channel_name}'.
         Read this script and generate: TITLE, DESCRIPTION, TAGS, HASHTAGS.
-        SCRIPT: {content[:3000]}
+        
+        SCRIPT:
+        {content[:3000]}
         """
 
-        messages=[
-            {"role": "system", "content": "You are a YouTube Growth Expert."},
-            {"role": "user", "content": prompt}
-        ]
-        
-        metadata = get_completion_with_retry(messages)
+        response = model.generate_content(prompt)
+        metadata = response.text
         
         if metadata:
             output_path = script_path.replace('.txt', '_METADATA.txt')
             with open(output_path, "w", encoding="utf-8") as f:
                 f.write(metadata)
             print(f"   ✅ Saved: {os.path.basename(output_path)}")
-        else:
-            print(f"   ❌ Failed to generate metadata for {script_path}")
         
     except Exception as e:
         print(f"   ❌ Error: {e}")
