@@ -1,29 +1,46 @@
 import os
 import datetime
 import time
-import google.generativeai as genai
+import requests
 import config
 
-# Setup Gemini
-genai.configure(api_key=config.GOOGLE_API_KEY)
-model = genai.GenerativeModel(config.GEMINI_MODEL_NAME)
+def call_gemini(prompt, system_role="You are a helpful assistant."):
+    """Direct HTTP call to Google Gemini API to avoid library issues."""
+    if not config.GOOGLE_API_KEY:
+        print("   ❌ Error: GOOGLE_API_KEY is missing.")
+        return None
 
-def generate_content_gemini(prompt):
-    """Wrapper to call Gemini with error handling"""
+    url = f"{config.GEMINI_API_URL}?key={config.GOOGLE_API_KEY}"
+    headers = {"Content-Type": "application/json"}
+    
+    # Gemini API Payload
+    payload = {
+        "contents": [{
+            "parts": [{"text": f"{system_role}\n\n{prompt}"}]
+        }]
+    }
+    
     try:
-        response = model.generate_content(prompt)
-        return response.text
+        response = requests.post(url, headers=headers, json=payload)
+        
+        if response.status_code != 200:
+            print(f"   ❌ API Error {response.status_code}: {response.text}")
+            return None
+            
+        result = response.json()
+        # Parse the JSON response
+        return result['candidates'][0]['content']['parts'][0]['text']
+        
     except Exception as e:
-        print(f"   ❌ Gemini Error: {e}")
-        # Simple backoff
+        print(f"   ❌ Connection Error: {e}")
         time.sleep(2)
         return None
 
 def generate_ideas(niche):
     print(f"   🧠 Brainstorming topics for {niche}...")
-    prompt = f"You are a YouTube Strategist. Give me 5 engaging, long-form (10 minute+) video topics for a channel about {niche}. Return only the titles, one per line, no numbering."
+    prompt = f"Give me 5 engaging, long-form (10 minute+) video topics for a YouTube channel about {niche}. Return only the titles, one per line, no numbering."
     
-    content = generate_content_gemini(prompt)
+    content = call_gemini(prompt, "You are a YouTube Strategist.")
     
     if content:
         return [line for line in content.split('\n') if line.strip()]
@@ -31,9 +48,9 @@ def generate_ideas(niche):
 
 def generate_script(title, system_role):
     print(f"   ✍️ Writing Script: {title}...")
-    prompt = f"{system_role} Write a comprehensive, long-form script for a video titled: '{title}'. Include visual cues in brackets [Like this]. Break it down into sections."
+    prompt = f"Write a comprehensive, long-form script for a video titled: '{title}'. Include visual cues in brackets [Like this]. Break it down into sections."
     
-    return generate_content_gemini(prompt)
+    return call_gemini(prompt, system_role)
 
 def main():
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -42,7 +59,7 @@ def main():
     if not os.path.exists(production_dir):
         os.makedirs(production_dir)
 
-    print(f"🚀 Starting Gemini Production Run: {timestamp}")
+    print(f"🚀 Starting Gemini (Direct API) Run: {timestamp}")
 
     for channel_name, role_prompt in config.CHANNEL_PROMPTS.items():
         print(f"\n📺 Processing Channel: {channel_name}...")
