@@ -1,5 +1,12 @@
 import os
 import time
+
+# --- CRITICAL FIX FOR PILLOW 10+ ---
+import PIL.Image
+if not hasattr(PIL.Image, 'ANTIALIAS'):
+    PIL.Image.ANTIALIAS = PIL.Image.LANCZOS
+# -----------------------------------
+
 from moviepy.editor import *
 from openai import OpenAI
 import config
@@ -43,6 +50,7 @@ def create_vertical_clip(video_path, filename):
         x1 = (w / 2) - (new_width / 2)
         x2 = (w / 2) + (new_width / 2)
         
+        # The resize function here was causing the crash
         cropped_clip = clip.crop(x1=x1, y1=0, x2=x2, y2=h).resize(height=1920)
         
         output_path = os.path.join(OUTPUT_DIR, f"REEL_{filename}")
@@ -82,6 +90,8 @@ def main():
     # 1. Process Video to Reel
     if os.path.exists(INPUT_DIR):
         video_files = [f for f in os.listdir(INPUT_DIR) if f.endswith(".mp4")]
+        if not video_files:
+             print("   ⚠️ No videos found to resize. Skipping Reels.")
         for video in video_files:
             create_vertical_clip(os.path.join(INPUT_DIR, video), video)
         
