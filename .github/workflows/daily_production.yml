@@ -1,0 +1,55 @@
+name: Daily Content Factory (Long Form)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate_content:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install System Dependencies (ImageMagick)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y imagemagick ffmpeg
+        # CRITICAL FIX: Allow ImageMagick to process text
+        sudo sed -i 's/none/read,write/g' /etc/ImageMagick-6/policy.xml
+
+    - name: Install Python Libraries
+      run: |
+        pip install -r requirements.txt
+
+    - name: 1. Generate Scripts (OpenRouter)
+      env:
+        OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      run: python 1_script_generator.py
+
+    - name: 2. Generate Audio (ElevenLabs)
+      env:
+        ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+      run: python 2_audio_factory.py
+
+    - name: 3. Download Stock Assets (Pexels)
+      env:
+        PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+      run: python 3_asset_downloader.py
+
+    - name: 4. Render Trivia Video
+      continue-on-error: true 
+      run: python 4_trivia_builder.py
+
+    - name: Upload Finished Production Pack
+      uses: actions/upload-artifact@v4
+      with:
+        name: Long-Form-Content-Pack
+        # THIS IS THE CHANGED LINE BELOW:
+        path: Production_Factory_LongForm/
+        retention-days: 5
