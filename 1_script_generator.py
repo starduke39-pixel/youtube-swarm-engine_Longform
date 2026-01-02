@@ -30,7 +30,7 @@ def get_completion_with_retry(messages):
             error_msg = str(e)
             if "429" in error_msg or "Rate limit" in error_msg:
                 print(f"   ⚠️ Rate limit hit on {model}. Switching...")
-                time.sleep(1) # Short cool-off
+                time.sleep(5) # Short cool-off
                 continue # Try next model
             else:
                 print(f"   ❌ Error on {model}: {e}")
