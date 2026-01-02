@@ -8,19 +8,16 @@ PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY")
 # --- OPENROUTER SETTINGS ---
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
-# --- UPDATED MODEL LIST (Working Free Models) ---
-# Replaced broken 404 models with active ones
+# --- UPDATED MODEL LIST (Active Free Models) ---
 MODEL_LIST = [
-    "google/gemini-2.0-flash-exp:free",              # Primary
-    "google/gemini-2.0-flash-lite-preview-02-05:free", # Backup 1 (New Google)
-    "meta-llama/llama-3.2-3b-instruct:free",         # Backup 2 (Fast)
-    "qwen/qwen-2.5-7b-instruct:free",                # Backup 3 (Reliable)
-    "mistralai/mistral-7b-instruct:free",            # Backup 4 (Classic)
-    "huggingfaceh4/zephyr-7b-beta:free"              # Backup 5 (Fallback)
+    "google/gemini-2.0-flash-exp:free",           # Primary
+    "meta-llama/llama-3.2-3b-instruct:free",      # Backup 1
+    "google/gemini-2.0-pro-exp-02-05:free",       # Backup 2 (New)
+    "microsoft/phi-3-mini-128k-instruct:free",    # Backup 3
+    "gryphe/mythomax-l2-13b:free"                 # Backup 4
 ]
 
 # --- DIRECTORY SETUP ---
-# Ensures files go to the Long Form folder
 BASE_DIR = "Production_Factory_LongForm"
 ASSETS_DIR = "assets"
 
