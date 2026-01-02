@@ -1,62 +1,39 @@
 import os
 import datetime
 import time
-from openai import OpenAI
+import google.generativeai as genai
 import config
 
-# Setup Client
-client = OpenAI(
-    base_url=config.OPENROUTER_BASE_URL,
-    api_key=config.OPENROUTER_API_KEY,
-)
+# Setup Gemini
+genai.configure(api_key=config.GOOGLE_API_KEY)
+model = genai.GenerativeModel(config.GEMINI_MODEL_NAME)
 
-def get_completion_with_retry(messages):
-    """Tries to get a response using the model list with fallback logic."""
-    
-    for model in config.MODEL_LIST:
-        try:
-            # print(f"   🤖 Trying model: {model}...") 
-            response = client.chat.completions.create(
-                model=model,
-                messages=messages,
-                extra_headers={
-                    "HTTP-Referer": "https://github.com",
-                    "X-Title": "YouTube Automation Bot",
-                }
-            )
-            return response.choices[0].message.content
-            
-        except Exception as e:
-            error_msg = str(e)
-            if "429" in error_msg or "Rate limit" in error_msg:
-                print(f"   ⚠️ Rate limit hit on {model}. Switching...")
-                time.sleep(5) # Short cool-off
-                continue # Try next model
-            else:
-                print(f"   ❌ Error on {model}: {e}")
-                continue
-                
-    print("   ❌ All models failed.")
-    return None
+def generate_content_gemini(prompt):
+    """Wrapper to call Gemini with error handling"""
+    try:
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        print(f"   ❌ Gemini Error: {e}")
+        # Simple backoff
+        time.sleep(2)
+        return None
 
 def generate_ideas(niche):
-    messages = [
-        {"role": "system", "content": "You are a YouTube Strategist."},
-        {"role": "user", "content": f"Give me 5 engaging, long-form (10 minute+) video topics for a channel about {niche}. Return only the titles, one per line, no numbering."}
-    ]
+    print(f"   🧠 Brainstorming topics for {niche}...")
+    prompt = f"You are a YouTube Strategist. Give me 5 engaging, long-form (10 minute+) video topics for a channel about {niche}. Return only the titles, one per line, no numbering."
     
-    content = get_completion_with_retry(messages)
+    content = generate_content_gemini(prompt)
     
     if content:
         return [line for line in content.split('\n') if line.strip()]
     return []
 
-def generate_script(title, system_prompt):
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": f"Write a comprehensive, long-form script for a video titled: '{title}'. Include visual cues in brackets [Like this]. Break it down into sections."}
-    ]
-    return get_completion_with_retry(messages)
+def generate_script(title, system_role):
+    print(f"   ✍️ Writing Script: {title}...")
+    prompt = f"{system_role} Write a comprehensive, long-form script for a video titled: '{title}'. Include visual cues in brackets [Like this]. Break it down into sections."
+    
+    return generate_content_gemini(prompt)
 
 def main():
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -65,9 +42,9 @@ def main():
     if not os.path.exists(production_dir):
         os.makedirs(production_dir)
 
-    print(f"🚀 Starting Production Run: {timestamp}")
+    print(f"🚀 Starting Gemini Production Run: {timestamp}")
 
-    for channel_name, prompt in config.CHANNEL_PROMPTS.items():
+    for channel_name, role_prompt in config.CHANNEL_PROMPTS.items():
         print(f"\n📺 Processing Channel: {channel_name}...")
         
         channel_path = os.path.join(production_dir, channel_name)
@@ -75,7 +52,6 @@ def main():
             os.makedirs(channel_path)
 
         # 1. Get Ideas
-        print("   Thinking of ideas...")
         titles = generate_ideas(channel_name)
         
         # 2. Write Scripts
@@ -86,8 +62,7 @@ def main():
                 
             if not clean_title: continue
             
-            print(f"   ✍️ Writing Script: {clean_title}")
-            script_content = generate_script(clean_title, prompt)
+            script_content = generate_script(clean_title, role_prompt)
             
             if script_content:
                 filename = f"{i+1}_{clean_title[:30]}.txt"
