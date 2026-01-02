@@ -1,14 +1,13 @@
 import os
 
 # --- API KEYS ---
-# Ensure you have added GOOGLE_API_KEY to your GitHub Secrets
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY")
 PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY")
 
-# --- GEMINI SETTINGS (DIRECT API) ---
-# We use the REST API URL directly to avoid library version issues
-GEMINI_MODEL = "gemini-1.5-flash"
+# --- GEMINI SETTINGS (LATEST MODEL) ---
+# Switching to Gemini 2.0 Flash Experimental
+GEMINI_MODEL = "gemini-2.0-flash-exp"
 GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
 
 # --- DIRECTORY SETUP ---
