@@ -1,4 +1,4 @@
-name: Daily Content Factory (Long Form)
+name: Daily Content Factory (Long Form + Socials)
 
 on:
   workflow_dispatch:
@@ -46,10 +46,18 @@ jobs:
       continue-on-error: true 
       run: python 4_trivia_builder.py
 
+    # --- NEW STEP ADDED HERE ---
+    - name: 5. Repurpose for Socials (Reels & Tweets)
+      env:
+        OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      run: python 5_social_repurposer.py
+
     - name: Upload Finished Production Pack
       uses: actions/upload-artifact@v4
       with:
-        name: Long-Form-Content-Pack
-        # THIS IS THE CHANGED LINE BELOW:
-        path: Production_Factory_LongForm/
+        name: Complete-Content-Pack
+        # --- UPDATED PATHS BELOW ---
+        path: |
+          Production_Factory_LongForm/
+          Social_Media_Pack/
         retention-days: 5
