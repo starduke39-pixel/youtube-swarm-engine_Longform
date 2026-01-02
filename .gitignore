@@ -1,0 +1,19 @@
+Ignore Python cache
+
+pycache/
+*.py[cod]
+
+Ignore Environment Variables
+
+.env
+
+Ignore Generated Content (We want the Action to handle artifacts, not git)
+
+Production_Factory/
+Rendered_Videos/
+Run_*/
+
+Ignore System Files
+
+.DS_Store
+Thumbs.db
