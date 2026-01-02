@@ -8,34 +8,15 @@ if not hasattr(PIL.Image, 'ANTIALIAS'):
 # -----------------------------------
 
 from moviepy.editor import *
-from openai import OpenAI
+import google.generativeai as genai
 import config
 
 INPUT_DIR = os.path.join(config.BASE_DIR, "Rendered_Videos_Long")
 OUTPUT_DIR = os.path.join(config.BASE_DIR, "Social_Media_Pack")
 
-client = OpenAI(
-    base_url=config.OPENROUTER_BASE_URL,
-    api_key=config.OPENROUTER_API_KEY,
-)
-
-def get_completion_with_retry(messages):
-    for model in config.MODEL_LIST:
-        try:
-            response = client.chat.completions.create(
-                model=model,
-                messages=messages,
-                extra_headers={"HTTP-Referer": "https://github.com"}
-            )
-            return response.choices[0].message.content
-        except Exception as e:
-            if "429" in str(e):
-                print(f"   ⚠️ Rate limit ({model}), switching...")
-                time.sleep(1)
-                continue
-            else:
-                continue
-    return None
+# Setup Gemini
+genai.configure(api_key=config.GOOGLE_API_KEY)
+model = genai.GenerativeModel(config.GEMINI_MODEL_NAME)
 
 def create_vertical_clip(video_path, filename):
     print(f"📱 Creating Reel from: {filename}")
@@ -45,12 +26,12 @@ def create_vertical_clip(video_path, filename):
             clip = clip.subclip(0, 60)
             
         w, h = clip.size
+        # Center Crop Logic
         target_ratio = 9/16
         new_width = h * target_ratio
         x1 = (w / 2) - (new_width / 2)
         x2 = (w / 2) + (new_width / 2)
         
-        # The resize function here was causing the crash
         cropped_clip = clip.crop(x1=x1, y1=0, x2=x2, y2=h).resize(height=1920)
         
         output_path = os.path.join(OUTPUT_DIR, f"REEL_{filename}")
@@ -66,12 +47,10 @@ def generate_twitter_thread(script_path, channel_name):
             
         print(f"🐦 Generating Tweets for {channel_name}...")
         
-        messages = [
-            {"role": "system", "content": "You are a social media manager."},
-            {"role": "user", "content": f"Turn this YouTube script into a viral 5-tweet thread.\n\nSCRIPT:\n{content[:4000]}"}
-        ]
+        prompt = f"You are a social media manager. Turn this YouTube script into a viral 5-tweet thread. Hook in first tweet. Format: TWEET 1: [text] ... TWEET 2: [text].\n\nSCRIPT:\n{content[:4000]}"
         
-        thread_content = get_completion_with_retry(messages)
+        response = model.generate_content(prompt)
+        thread_content = response.text
         
         if thread_content:
             base_name = os.path.basename(script_path).replace('.txt', '')
@@ -90,8 +69,6 @@ def main():
     # 1. Process Video to Reel
     if os.path.exists(INPUT_DIR):
         video_files = [f for f in os.listdir(INPUT_DIR) if f.endswith(".mp4")]
-        if not video_files:
-             print("   ⚠️ No videos found to resize. Skipping Reels.")
         for video in video_files:
             create_vertical_clip(os.path.join(INPUT_DIR, video), video)
         
