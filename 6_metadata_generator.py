@@ -1,12 +1,20 @@
 import os
-import google.generativeai as genai
+import requests
 import config
 
 INPUT_DIR = os.path.join(config.BASE_DIR)
 
-# Setup Gemini
-genai.configure(api_key=config.GOOGLE_API_KEY)
-model = genai.GenerativeModel(config.GEMINI_MODEL_NAME)
+def call_gemini(prompt):
+    if not config.GOOGLE_API_KEY: return None
+    url = f"{config.GEMINI_API_URL}?key={config.GOOGLE_API_KEY}"
+    headers = {"Content-Type": "application/json"}
+    payload = {"contents": [{"parts": [{"text": prompt}]}]}
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()['candidates'][0]['content']['parts'][0]['text']
+    except Exception as e:
+        print(f"❌ API Error: {e}")
+        return None
 
 def generate_seo_metadata(script_path, channel_name):
     try:
@@ -18,13 +26,10 @@ def generate_seo_metadata(script_path, channel_name):
         prompt = f"""
         You are a YouTube SEO Expert for the channel '{channel_name}'.
         Read this script and generate: TITLE, DESCRIPTION, TAGS, HASHTAGS.
-        
-        SCRIPT:
-        {content[:3000]}
+        SCRIPT: {content[:3000]}
         """
 
-        response = model.generate_content(prompt)
-        metadata = response.text
+        metadata = call_gemini(prompt)
         
         if metadata:
             output_path = script_path.replace('.txt', '_METADATA.txt')
