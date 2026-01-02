@@ -1,22 +1,31 @@
 import os
 import time
+import requests
 
-# --- CRITICAL FIX FOR PILLOW 10+ ---
+# --- CRITICAL FIX FOR PILLOW ---
 import PIL.Image
 if not hasattr(PIL.Image, 'ANTIALIAS'):
     PIL.Image.ANTIALIAS = PIL.Image.LANCZOS
-# -----------------------------------
+# -------------------------------
 
 from moviepy.editor import *
-import google.generativeai as genai
 import config
 
 INPUT_DIR = os.path.join(config.BASE_DIR, "Rendered_Videos_Long")
 OUTPUT_DIR = os.path.join(config.BASE_DIR, "Social_Media_Pack")
 
-# Setup Gemini
-genai.configure(api_key=config.GOOGLE_API_KEY)
-model = genai.GenerativeModel(config.GEMINI_MODEL_NAME)
+def call_gemini(prompt):
+    """Direct API call"""
+    if not config.GOOGLE_API_KEY: return None
+    url = f"{config.GEMINI_API_URL}?key={config.GOOGLE_API_KEY}"
+    headers = {"Content-Type": "application/json"}
+    payload = {"contents": [{"parts": [{"text": prompt}]}]}
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()['candidates'][0]['content']['parts'][0]['text']
+    except Exception as e:
+        print(f"❌ API Error: {e}")
+        return None
 
 def create_vertical_clip(video_path, filename):
     print(f"📱 Creating Reel from: {filename}")
@@ -26,7 +35,7 @@ def create_vertical_clip(video_path, filename):
             clip = clip.subclip(0, 60)
             
         w, h = clip.size
-        # Center Crop Logic
+        # Center Crop for Vertical
         target_ratio = 9/16
         new_width = h * target_ratio
         x1 = (w / 2) - (new_width / 2)
@@ -46,11 +55,8 @@ def generate_twitter_thread(script_path, channel_name):
             content = f.read()
             
         print(f"🐦 Generating Tweets for {channel_name}...")
-        
-        prompt = f"You are a social media manager. Turn this YouTube script into a viral 5-tweet thread. Hook in first tweet. Format: TWEET 1: [text] ... TWEET 2: [text].\n\nSCRIPT:\n{content[:4000]}"
-        
-        response = model.generate_content(prompt)
-        thread_content = response.text
+        prompt = f"Turn this YouTube script into a viral 5-tweet thread.\nSCRIPT:\n{content[:4000]}"
+        thread_content = call_gemini(prompt)
         
         if thread_content:
             base_name = os.path.basename(script_path).replace('.txt', '')
